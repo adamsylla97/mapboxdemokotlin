@@ -1,9 +1,11 @@
 package com.example.mapboxdemokotlin
 
+import android.annotation.SuppressLint
 import android.location.Location
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.PersistableBundle
+import android.util.Log
 import android.widget.Button
 import android.widget.Toast
 import com.mapbox.android.core.location.LocationEngine
@@ -12,6 +14,8 @@ import com.mapbox.android.core.location.LocationEnginePriority
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
+import com.mapbox.api.directions.v5.models.DirectionsResponse
+import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.annotations.Marker
@@ -23,6 +27,17 @@ import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.CameraMode
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode
+// classes needed to add a marker
+import com.mapbox.geojson.Feature;
+import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
+import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher
+import com.mapbox.services.android.navigation.ui.v5.NavigationLauncherOptions
+import com.mapbox.services.android.navigation.ui.v5.route.NavigationMapRoute
+import com.mapbox.services.android.navigation.v5.navigation.NavigationRoute
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener, MapboxMap.OnMapClickListener {
     private lateinit var mapView: MapView
@@ -37,11 +52,16 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private var locationLayerPlugin: LocationLayerPlugin? = null
     private var destinationMarker: Marker? = null
 
+    //navigation
+    var navigationMapRoute: NavigationMapRoute? = null
+    var currentRoute: DirectionsRoute? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+
 
         Mapbox.getInstance(applicationContext, getString(R.string.access_token))
+        setContentView(R.layout.activity_main)
         mapView = findViewById(R.id.mapView)
         mapView.onCreate(savedInstanceState)
 
@@ -54,7 +74,12 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         }
 
         startButton.setOnClickListener {
-            //launch navigation ui
+            val navigationLauncherOptions = NavigationLauncherOptions.builder() //1
+                .directionsRoute(currentRoute) //2
+                .shouldSimulateRoute(false) //3
+                .build()
+
+            NavigationLauncher.startNavigation(this, navigationLauncherOptions) //4
         }
     }
 
@@ -63,6 +88,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         if(PermissionsManager.areLocationPermissionsGranted(this)){
             initializeLocationEngine()
             initializeLocationLayer()
+            map.addOnMapClickListener(this)
         } else {
             permissionManager = PermissionsManager(this)
             permissionManager.requestLocationPermissions(this)
@@ -98,12 +124,19 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     }
 
     override fun onMapClick(point: LatLng) {
+
+        if(!map.markers.isEmpty()){
+            map.clear()
+        }
+
         destinationMarker = map.addMarker(MarkerOptions().position(point))
         destinationPosition = Point.fromLngLat(point.longitude, point.latitude)
         originPosition = Point.fromLngLat(originLocation.longitude, originLocation.latitude)
-
+        val startPoint = Point.fromLngLat(originLocation.longitude, originLocation.latitude)
+        val endPoint = Point.fromLngLat(destinationPosition.longitude(), destinationPosition.latitude())
         startButton.isEnabled = true
         startButton.setBackgroundResource(R.color.mapboxBlue)
+        getRoute(endPoint,startPoint)
         Toast.makeText(this,"Map on click",Toast.LENGTH_LONG).show()
     }
 
@@ -127,6 +160,44 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         location?.let {
             originLocation = location
             setCameraPosition(location)
+        }
+    }
+
+    //navigation part
+    fun getRoute(originPoint: Point, endPoint: Point) {
+        NavigationRoute.builder(this) //1
+            .accessToken(Mapbox.getAccessToken()!!) //2
+            .origin(originPoint) //3
+            .destination(endPoint) //4
+            .build() //5
+            .getRoute(object : Callback<DirectionsResponse> { //6
+                override fun onFailure(call: Call<DirectionsResponse>, t: Throwable) {
+                    Log.d("MainActivity", t.localizedMessage)
+                }
+
+                override fun onResponse(call: Call<DirectionsResponse>,
+                                        response: Response<DirectionsResponse>
+                ) {
+                    if (navigationMapRoute != null) {
+                        navigationMapRoute?.updateRouteVisibilityTo(false)
+                    } else {
+                        navigationMapRoute = NavigationMapRoute(null, mapView, map)
+                    }
+
+                    currentRoute = response.body()?.routes()?.first()
+                    if (currentRoute != null) {
+                        navigationMapRoute?.addRoute(currentRoute)
+                    }
+                }
+            })
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun checkLocation() {
+        if (originLocation == null) {
+            map.locationComponent.lastKnownLocation?.run {
+                originLocation = this
+            }
         }
     }
 
