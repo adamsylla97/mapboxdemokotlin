@@ -8,13 +8,25 @@
         tools:context=".MainActivity">
 
     <com.mapbox.mapboxsdk.maps.MapView
-        android:id="@+id/mapView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        mapbox:mapbox_cameraTargetLat = "37.7749"
-        mapbox:mapbox_cameraTargetLng = "-122.4194"
-        mapbox:mapbox_styleUrl="mapbox://styles/mapbox/streets-v10"
-        mapbox:mapbox_cameraZoom = "12"
+            android:id="@+id/mapView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            mapbox:mapbox_cameraTargetLat="37.7749"
+            mapbox:mapbox_cameraTargetLng="-122.4194"
+            mapbox:mapbox_styleUrl="mapbox://styles/mapbox/streets-v10"
+            mapbox:mapbox_cameraZoom="12"
     />
+    <Button
+            android:text="@string/start_navigating"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/startButton"
+            mapbox:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="24dp"
+            mapbox:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="24dp"
+            android:layout_marginBottom="24dp"
+            mapbox:layout_constraintBottom_toBottomOf="parent" android:background="@color/mapboxGrayLight"
+            android:enabled="false"/>
 
 </android.support.constraint.ConstraintLayout>

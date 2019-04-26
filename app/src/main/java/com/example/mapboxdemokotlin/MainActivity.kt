@@ -4,6 +4,7 @@ import android.location.Location
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.PersistableBundle
+import android.widget.Button
 import android.widget.Toast
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineListener
@@ -11,7 +12,10 @@ import com.mapbox.android.core.location.LocationEnginePriority
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
+import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
+import com.mapbox.mapboxsdk.annotations.Marker
+import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapView
@@ -20,14 +24,18 @@ import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.CameraMode
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode
 
-class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener {
+class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineListener, MapboxMap.OnMapClickListener {
     private lateinit var mapView: MapView
     private lateinit var map: MapboxMap
     private lateinit var permissionManager: PermissionsManager
     private lateinit var originLocation: Location
+    private lateinit var startButton: Button
+    private lateinit var originPosition: Point
+    private lateinit var destinationPosition: Point
 
     private var locationEngine: LocationEngine? = null
     private var locationLayerPlugin: LocationLayerPlugin? = null
+    private var destinationMarker: Marker? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,9 +45,16 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         mapView = findViewById(R.id.mapView)
         mapView.onCreate(savedInstanceState)
 
+        //button
+        startButton = findViewById(R.id.startButton)
+
         mapView.getMapAsync { mapboxMap -> //called when out map is ready to go
             map = mapboxMap
             enableLocation()
+        }
+
+        startButton.setOnClickListener {
+            //launch navigation ui
         }
     }
 
@@ -81,6 +96,17 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
     private fun setCameraPosition(location: Location){
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(location.latitude, location.longitude), 13.0))
     }
+
+    override fun onMapClick(point: LatLng) {
+        destinationMarker = map.addMarker(MarkerOptions().position(point))
+        destinationPosition = Point.fromLngLat(point.longitude, point.latitude)
+        originPosition = Point.fromLngLat(originLocation.longitude, originLocation.latitude)
+
+        startButton.isEnabled = true
+        startButton.setBackgroundResource(R.color.mapboxBlue)
+        Toast.makeText(this,"Map on click",Toast.LENGTH_LONG).show()
+    }
+
 
     //when user declines permission
     override fun onExplanationNeeded(permissionsToExplain: MutableList<String>?) {
