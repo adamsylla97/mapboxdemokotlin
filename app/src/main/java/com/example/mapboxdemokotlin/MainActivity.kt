@@ -14,8 +14,10 @@ import com.mapbox.android.core.location.LocationEnginePriority
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
+import com.mapbox.api.directions.v5.DirectionsCriteria
 import com.mapbox.api.directions.v5.models.DirectionsResponse
 import com.mapbox.api.directions.v5.models.DirectionsRoute
+import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.annotations.Marker
@@ -35,6 +37,8 @@ import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher
 import com.mapbox.services.android.navigation.ui.v5.NavigationLauncherOptions
 import com.mapbox.services.android.navigation.ui.v5.route.NavigationMapRoute
 import com.mapbox.services.android.navigation.v5.navigation.NavigationRoute
+import com.mapbox.services.android.navigation.v5.navigation.NavigationRoute.Builder
+import okhttp3.Route
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -165,6 +169,20 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
     //navigation part
     fun getRoute(originPoint: Point, endPoint: Point) {
+        val coorsList = mutableListOf<Point>()
+        coorsList.add(originPoint)
+        coorsList.add(endPoint)
+        val routeOptions: RouteOptions = RouteOptions.builder()
+            .baseUrl("baseURL")
+            .user("user")
+            .coordinates(coorsList)
+            .geometries("geometries")
+            .accessToken(Mapbox.getAccessToken()!!)
+            .requestUuid("uuid")
+            .profile(DirectionsCriteria.PROFILE_WALKING)
+            .build()
+
+
         NavigationRoute.builder(this) //1
             .accessToken(Mapbox.getAccessToken()!!) //2
             .origin(originPoint) //3
