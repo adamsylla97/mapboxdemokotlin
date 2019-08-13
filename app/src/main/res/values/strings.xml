@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">mapboxdemokotlin</string>
+    <string name="app_name">CanisNavigation</string>
     <string name="access_token">pk.eyJ1IjoiYWRhbXNraTEyNiIsImEiOiJjanV3anBvNHAwZDVjM3lwYmUxZGRtd3I2In0.oKFfz8R4hH5zT21IU3pKoA</string>
     <string name="start_navigating">Start navigating</string>
 </resources>

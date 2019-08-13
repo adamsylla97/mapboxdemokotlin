@@ -79,6 +79,7 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
 
         startButton.setOnClickListener {
             val navigationLauncherOptions = NavigationLauncherOptions.builder() //1
+                .directionsProfile(DirectionsCriteria.PROFILE_WALKING)
                 .directionsRoute(currentRoute) //2
                 .shouldSimulateRoute(false) //3
                 .build()
@@ -172,25 +173,29 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
         val coorsList = mutableListOf<Point>()
         coorsList.add(originPoint)
         coorsList.add(endPoint)
-        val routeOptions: RouteOptions = RouteOptions.builder()
-            .baseUrl("baseURL")
-            .user("user")
-            .coordinates(coorsList)
-            .geometries("geometries")
-            .accessToken(Mapbox.getAccessToken()!!)
-            .requestUuid("uuid")
-            .profile(DirectionsCriteria.PROFILE_WALKING)
-            .build()
+        //val routeOptions: RouteOptions = RouteOptions.builder()
+//            .accessToken(Mapbox.getAccessToken()!!)
+//            .baseUrl("https://api-directions-traf.com")
+//            .requestUuid("XYZ_UUID")
+//            .alternatives(true)
+//            .coordinates(coorsList)
+//            .voiceUnits(DirectionsCriteria.METRIC)
+//            .profile(DirectionsCriteria.PROFILE_WALKING)
+//            .geometries("mocked_geometries")
+//            .user("example_user")
+//            .build()
 
 
         NavigationRoute.builder(this) //1
             .accessToken(Mapbox.getAccessToken()!!) //2
-            .origin(originPoint) //3
-            .destination(endPoint) //4
+            .origin(coorsList[0]) //3
+            .destination(coorsList[1]) //4
+            .profile("walking")
+           // .routeOptions(routeOptions)
             .build() //5
             .getRoute(object : Callback<DirectionsResponse> { //6
                 override fun onFailure(call: Call<DirectionsResponse>, t: Throwable) {
-                    Log.d("MainActivity", t.localizedMessage)
+                    Log.d("MainActivity", call.toString())
                 }
 
                 override fun onResponse(call: Call<DirectionsResponse>,
@@ -201,6 +206,8 @@ class MainActivity : AppCompatActivity(), PermissionsListener, LocationEngineLis
                     } else {
                         navigationMapRoute = NavigationMapRoute(null, mapView, map)
                     }
+
+
 
                     currentRoute = response.body()?.routes()?.first()
                     if (currentRoute != null) {

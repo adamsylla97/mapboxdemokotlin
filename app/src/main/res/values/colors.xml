@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#4264fb</color>
-    <color name="colorPrimaryDark">#4264fb</color>
-    <color name="colorAccent">#4264fb</color>
+    <color name="colorPrimary">#750105</color>
+    <color name="colorPrimaryDark">#a0363a</color>
+    <color name="colorAccent">#D81B60</color>
 
     <color name="mapboxWhite">#ffffff</color>
-    <color name="mapboxBlue">#4264fb</color>
+    <color name="mapboxBlue">#a0363a</color>
     <color name="mapboxGrayLight">#C6D2E1</color>
 </resources>
